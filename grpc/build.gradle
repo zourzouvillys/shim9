@@ -65,19 +65,23 @@ compileJava {
 }
 
 
+
+
 task compileOne (type: JavaCompile) {
   source = file('module-info.java')
   classpath = files()
   destinationDir = file("${buildDir}/module-info")
+  doFirst {
+    options.compilerArgs = [
+      "--module-path", configurations.moduleDist.asPath,
+      "--patch-module", "io.grpc=${buildDir}/libs/grpc-in.jar"
+    ]
+    inputs.properties['moduleName'] = 'io.grpc'
+  }
 }
 
-compileOne.options.compilerArgs = [
-  "--module-path", configurations.moduleDist.asPath,
-  "--patch-module", "io.grpc=${buildDir}/libs/grpc-in.jar"
-]
-compileOne.inputs.properties['moduleName'] = 'io.grpc'
 
-compileOne.dependsOn = [ 'uberJar' ]
+compileOne.dependsOn = [ ':protobuf:targetJar', 'uberJar' ]
 
 
 task targetJar(type: Jar) {
