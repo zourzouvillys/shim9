@@ -1,6 +1,7 @@
 
 plugins {
   id 'java-library'
+  id 'maven-publish'
 }
 
 targetCompatibility = 9
@@ -66,3 +67,17 @@ tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
 artifacts {
   archives targetJar
 }
+
+
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+          artifact targetJar
+          artifactId 'protobuf'
+        }
+    }
+}
+
+
