@@ -1,7 +1,7 @@
 
 plugins {
   id 'java-library'
-  id "maven"  
+  id "maven-publish"
 }
 
 targetCompatibility = 9
@@ -11,7 +11,6 @@ repositories {
   jcenter()
 }
 
-group = project.getProperty('group') ?: "io.zrz"
 
 def grpcVersion = '1.12.0'
 def reactiveGrpcVersion = '0.8.2'
@@ -71,3 +70,15 @@ tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
 artifacts {
   archives targetJar
 }
+
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+          artifact targetJar
+          artifactId 'grpc'
+        }
+    }
+}
+

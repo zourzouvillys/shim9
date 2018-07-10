@@ -1,6 +1,6 @@
 
 allprojects {
 
-  group = project.getProperty('group') ?: "io.zrz"
+  group = project.getProperty('group') ?: "io.zrz.shim9"
 
 }
