@@ -62,3 +62,7 @@ targetJar.dependsOn = [compileOne]
 
 tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
 
+
+artifacts {
+  archives targetJar
+}

@@ -1,0 +1,6 @@
+
+allprojects {
+
+  group = project.getProperty('group') ?: "io.zrz"
+
+}
