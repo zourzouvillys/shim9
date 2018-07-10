@@ -1,12 +1,13 @@
 module io.grpc {
 
+	
+	requires com.google.protobuf;
+
 	exports io.grpc;
 	exports io.grpc.protobuf;
 	exports io.grpc.internal;
 	exports io.grpc.stub;
 	exports io.grpc.util;
-	
-	requires com.google.protobuf;
 	
 	requires java.logging;
 	requires java.naming;

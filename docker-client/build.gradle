@@ -6,6 +6,10 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
+def moduleName = 'com.spotify.docker.client'
+
+version = '8.11.7'
+
 targetCompatibility = 9
 sourceCompatibility = 9
 
@@ -13,31 +17,26 @@ repositories {
   jcenter()
 }
 
-def grpcVersion = '1.12.0'
-def reactiveGrpcVersion = '0.8.2'
-
 configurations {
   moduleDist
 }
 
 dependencies {
-  compile 'com.google.protobuf:protobuf-java:3.6.0'
-  compile 'com.google.protobuf:protobuf-java-util:3.6.0'
+  compile('javax.activation:activation:1.1.1')
+  compile ("com.spotify:docker-client:${project.version}:shaded") {
+    transitive = false
+  }
 }
 
 
 task uberJar(type: ShadowJar) {
   appendix = 'in'
   configurations = [ project.configurations.compile ]
-  dependencies {
-    exclude(dependency('com.google.guava:guava'))
-    exclude(dependency('com.google.code.gson:gson'))
-  }
+  relocate 'com.google.thirdparty', 'jersey.repackaged.com.google.thirdparty'
+  relocate 'javax.activation', 'com.spotify.repackaged.javax.activation'
 }
 
-
-
-
+/// ----
 
 compileJava.dependsOn = ['uberJar']
 
@@ -45,12 +44,12 @@ compileJava {
   doFirst {
     println classpath
   }
-  inputs.property("moduleName", "com.google.protobuf") 
+  inputs.property("moduleName", "com.spotify.docker.client") 
   doFirst {
     classpath.each { println it }
     options.compilerArgs = [
     ]
-    classpath = files(["${buildDir}/grpc"])
+    classpath = files(["${buildDir}/classpath"])
   }
 }
 
@@ -62,10 +61,10 @@ task compileOne (type: JavaCompile) {
 }
 
 compileOne.options.compilerArgs = [
-  "--patch-module", "com.google.protobuf=${buildDir}/libs/protobuf-in.jar"
+  "--patch-module", "${moduleName}=${buildDir}/libs/${project.name}-in-${project.version}.jar"
 ]
 
-compileOne.inputs.properties['moduleName'] = 'com.google.protobuf'
+compileOne.inputs.properties['moduleName'] = moduleName
 
 compileOne.dependsOn = [ 'uberJar' ]
 
@@ -75,7 +74,7 @@ compileOne.dependsOn = [ 'uberJar' ]
 task targetJar(type: Jar) {
     // appendix = 'target'
     from file("${buildDir}/module-info")
-    from zipTree(file("${buildDir}/libs/protobuf-in.jar"))
+    from zipTree(file("${buildDir}/libs/${project.name}-in-${project.version}.jar"))
 }
 
 targetJar.dependsOn = [ 'compileOne' ]
@@ -95,8 +94,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
           artifact targetJar
-          artifactId 'protobuf-java'
-          version '3.6.0'
+          artifactId 'docker-client'
+          version project.version
         }
     }
 }
