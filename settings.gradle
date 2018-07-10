@@ -1,3 +1,4 @@
 rootProject.name = 'shim9'
 
 include 'grpc'
+include 'protobuf'

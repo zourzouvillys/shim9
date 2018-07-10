@@ -1,0 +1,64 @@
+
+plugins {
+  id 'java-library'
+}
+
+targetCompatibility = 9
+sourceCompatibility = 9
+
+repositories {
+  jcenter()
+}
+
+def grpcVersion = '1.12.0'
+def reactiveGrpcVersion = '0.8.2'
+
+dependencies {
+  implementation 'com.google.protobuf:protobuf-java:3.5.1'
+}
+
+
+task uberJar(type: Copy) {
+  into "${buildDir}/grpc"
+  from configurations.compileClasspath.
+                                         findAll { it.name.endsWith('jar') }.
+                                         flatten { zipTree(it) }
+}
+
+compileJava.dependsOn = ['uberJar']
+
+compileJava {
+  inputs.property("moduleName", "com.google.protobuf") 
+  doFirst {
+    classpath.each { println it }
+    options.compilerArgs = [
+    ]
+    classpath = files(["${buildDir}/grpc"])
+  }
+}
+
+
+task compileOne (type: JavaCompile) {
+    source = file('module-info.java')
+    classpath = files("${buildDir}/grpc")
+    destinationDir = file("${buildDir}/module-info")
+}
+
+compileOne.options.compilerArgs = ["--patch-module", "com.google.protobuf=${buildDir}/grpc"]
+compileOne.inputs.properties['moduleName'] = 'com.google.protobuf'
+
+compileOne.dependsOn = [ 'uberJar' ]
+
+////
+
+
+task targetJar(type: Jar) {
+    // appendix = 'target'
+    from file("${buildDir}/module-info")
+    from "${buildDir}/grpc"
+}
+
+targetJar.dependsOn = [compileOne]
+
+tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
+
