@@ -11,7 +11,7 @@ repositories {
   jcenter()
 }
 
-group = 'io.zrz.shim9'
+group = project.getProperty('group') ?: "io.zrz"
 
 def grpcVersion = '1.12.0'
 def reactiveGrpcVersion = '0.8.2'
