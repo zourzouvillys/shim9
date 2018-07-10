@@ -51,14 +51,14 @@ compileJava {
 
 task compileOne (type: JavaCompile) {
   doFirst {
-    println file("${buildDir}/libs/guava-in.jar")
+    println file("${buildDir}/libs/guava-in-${project.version}.jar")
   }
     source = file('module-info.java')
     classpath = files()
     destinationDir = file("${buildDir}/module-info")
 }
 
-compileOne.options.compilerArgs = ["--patch-module", "com.google.common=${buildDir}/libs/guava-in.jar"]
+compileOne.options.compilerArgs = ["--patch-module", "com.google.common=${buildDir}/libs/guava-in-${project.version}.jar"]
 compileOne.inputs.properties['moduleName'] = 'com.google.common'
 
 compileOne.dependsOn = [ 'uberJar' ]
@@ -68,7 +68,7 @@ compileOne.dependsOn = [ 'uberJar' ]
 
 task targetJar(type: Jar) {
     from file("${buildDir}/module-info")
-    from zipTree(file("${buildDir}/libs/guava-in.jar"))
+    from zipTree(file("${buildDir}/libs/guava-in-${project.version}.jar"))
 }
 
 targetJar.dependsOn = [compileOne]

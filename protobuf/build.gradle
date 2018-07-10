@@ -44,7 +44,7 @@ compileJava {
   }
   inputs.property("moduleName", "com.google.protobuf") 
   doFirst {
-    classpath = files(["${buildDir}/libs/protobuf-in.jar"])
+    classpath = files(["${buildDir}/libs/protobuf-in-${project.version}.jar"])
   }
 }
 
@@ -56,7 +56,7 @@ task compileOne (type: JavaCompile) {
 }
 
 compileOne.options.compilerArgs = [
-  "--patch-module", "com.google.protobuf=${buildDir}/libs/protobuf-in.jar"
+  "--patch-module", "com.google.protobuf=${buildDir}/libs/protobuf-in-${project.version}.jar"
 ]
 
 compileOne.inputs.properties['moduleName'] = 'com.google.protobuf'
@@ -69,7 +69,7 @@ compileOne.dependsOn = [ 'uberJar' ]
 task targetJar(type: Jar) {
     // appendix = 'target'
     from file("${buildDir}/module-info")
-    from zipTree(file("${buildDir}/libs/protobuf-in.jar"))
+    from zipTree(file("${buildDir}/libs/protobuf-in-${project.version}.jar"))
 }
 
 targetJar.dependsOn = [ 'compileOne' ]
