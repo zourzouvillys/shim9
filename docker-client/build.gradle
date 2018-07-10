@@ -72,7 +72,7 @@ compileOne.dependsOn = [ 'uberJar' ]
 
 
 task targetJar(type: Jar) {
-    // appendix = 'target'
+  appendix = 'out'
     from file("${buildDir}/module-info")
     from zipTree(file("${buildDir}/libs/${project.name}-in-${project.version}.jar"))
 }

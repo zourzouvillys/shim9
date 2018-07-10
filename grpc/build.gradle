@@ -85,6 +85,7 @@ compileOne.dependsOn = [ ':protobuf:targetJar', 'uberJar' ]
 
 
 task targetJar(type: Jar) {
+  appendix = 'out'
     from file("${buildDir}/module-info")
     from zipTree(file("${buildDir}/libs/grpc-in-${project.version}.jar"))
 }

@@ -67,6 +67,7 @@ compileOne.dependsOn = [ 'uberJar' ]
 
 
 task targetJar(type: Jar) {
+  appendix = 'out'
     from file("${buildDir}/module-info")
     from zipTree(file("${buildDir}/libs/guava-in-${project.version}.jar"))
 }

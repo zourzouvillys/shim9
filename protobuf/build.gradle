@@ -36,16 +36,11 @@ task uberJar(type: ShadowJar) {
 }
 
 
-compileJava.dependsOn = ['uberJar']
+compileJava.dependsOn uberJar
 
 compileJava {
-  doFirst {
-    println classpath
-  }
   inputs.property("moduleName", "com.google.protobuf") 
-  doFirst {
-    classpath = files(["${buildDir}/libs/protobuf-in-${project.version}.jar"])
-  }
+  classpath = files([uberJar.archivePath])
 }
 
 
@@ -56,23 +51,24 @@ task compileOne (type: JavaCompile) {
 }
 
 compileOne.options.compilerArgs = [
-  "--patch-module", "com.google.protobuf=${buildDir}/libs/protobuf-in-${project.version}.jar"
+  "--patch-module",
+  "com.google.protobuf=${uberJar.archivePath}"
 ]
 
 compileOne.inputs.properties['moduleName'] = 'com.google.protobuf'
 
-compileOne.dependsOn = [ 'uberJar' ]
+compileOne.dependsOn uberJar
 
 ////
 
 
 task targetJar(type: Jar) {
-    // appendix = 'target'
-    from file("${buildDir}/module-info")
-    from zipTree(file("${buildDir}/libs/protobuf-in-${project.version}.jar"))
+  appendix = 'out'
+  from file("${buildDir}/module-info")
+  from zipTree(file(uberJar.archivePath))
 }
 
-targetJar.dependsOn = [ 'compileOne' ]
+targetJar.dependsOn compileOne
 
 tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
 
@@ -81,8 +77,6 @@ artifacts {
   archives targetJar
   moduleDist targetJar
 }
-
-
 
 
 publishing {
