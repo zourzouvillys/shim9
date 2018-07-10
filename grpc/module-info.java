@@ -10,6 +10,8 @@ module io.grpc {
 	
 	requires java.logging;
 	requires java.naming;
+	requires static java.sql;
+	requires static java.compiler;
 
 	// requires error.prone.annotations;
 	// requires guava;

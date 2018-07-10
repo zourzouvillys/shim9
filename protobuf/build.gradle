@@ -19,7 +19,8 @@ configurations {
 }
 
 dependencies {
-  implementation 'com.google.protobuf:protobuf-java:3.5.1'
+  implementation 'com.google.protobuf:protobuf-java:3.6.0'
+  implementation 'com.google.protobuf:protobuf-java-util:3.6.0'
 }
 
 
@@ -33,6 +34,9 @@ task uberJar(type: Copy) {
 compileJava.dependsOn = ['uberJar']
 
 compileJava {
+  doFirst {
+    println classpath
+  }
   inputs.property("moduleName", "com.google.protobuf") 
   doFirst {
     classpath.each { println it }
@@ -80,7 +84,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
           artifact targetJar
-          artifactId 'protobuf'
+          artifactId 'protobuf-java'
+          version '3.6.0'
         }
     }
 }

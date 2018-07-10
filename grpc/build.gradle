@@ -1,7 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 
 plugins {
   id 'java-library'
   id "maven-publish"
+  id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 targetCompatibility = 9
@@ -28,21 +30,28 @@ def reactiveGrpcVersion = '0.8.2'
 
 dependencies {
   moduleDist project(path: ':protobuf', configuration: 'moduleDist')
-  //originalImplementation 'com.google.protobuf:protobuf-java:3.5.1'
-  implementation ("io.grpc:grpc-protobuf:${grpcVersion}") {
-    exclude group: 'com.google.code.gson'
-    exclude group: 'com.google.guava'
-    exclude group: 'com.google.protobuf'
-  }
-  implementation ("io.grpc:grpc-stub:${grpcVersion}") {
-    exclude group: 'com.google.code.gson'
-    exclude group: 'com.google.guava'
-    exclude group: 'com.google.protobuf'
+  compile ("io.grpc:grpc-protobuf:${grpcVersion}")
+  compile ("io.grpc:grpc-stub:${grpcVersion}")
+}
+
+
+task uberJar(type: ShadowJar) {
+  appendix = 'in'
+  configurations = [ project.configurations.compile ]
+  relocate 'io.opencensus', 'io.grpc.shadow.io.opencensus'
+  exclude 'com/google/protobuf/**'
+  dependencies {
+    exclude(dependency('com.google.protobuf:protobuf-java'))
+    exclude(dependency('com.google.protobuf:protobuf-java-util'))
+    exclude(dependency('com.google.guava:guava'))
   }
 }
 
 
-task uberJar(type: Copy) {
+
+
+
+task OLDuberJar(type: Copy) {
   into "${buildDir}/grpc"
   from configurations.compileClasspath.
                                          findAll { it.name.endsWith('jar') }.
@@ -67,23 +76,27 @@ compileJava {
 
 
 task compileOne (type: JavaCompile) {
-    source = file('module-info.java')
-    classpath = files("${buildDir}/grpc")
-    destinationDir = file("${buildDir}/module-info")
+  doFirst {
+    println 'xxxx'
+    println configurations.moduleDist.asPath
+  }
+  source = file('module-info.java')
+  classpath = files()
+  destinationDir = file("${buildDir}/module-info")
 }
 
-compileOne.options.compilerArgs = ["--patch-module", "io.grpc=${buildDir}/grpc", "--module-path", configurations.moduleDist.each { println it } .asPath ]
+compileOne.options.compilerArgs = [
+  "--module-path", configurations.moduleDist.asPath,
+  "--patch-module", "io.grpc=${buildDir}/libs/grpc-in.jar"
+]
 compileOne.inputs.properties['moduleName'] = 'io.grpc'
 
 compileOne.dependsOn = [ 'uberJar' ]
 
-////
-
 
 task targetJar(type: Jar) {
-    // appendix = 'target'
     from file("${buildDir}/module-info")
-    from "${buildDir}/grpc"
+    from zipTree(file("${buildDir}/libs/grpc-in.jar"))
 }
 
 targetJar.dependsOn = [compileOne]
@@ -102,6 +115,7 @@ publishing {
         mavenJava(MavenPublication) {
           artifact targetJar
           artifactId 'grpc'
+          version '1.12.0'
         }
     }
 }

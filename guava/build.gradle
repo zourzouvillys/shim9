@@ -27,9 +27,13 @@ dependencies {
 task uberJar(type: ShadowJar) {
   appendix = 'in'
   configurations = [ project.configurations.compile ]
-  relocate 'javax.annotation', 'com.google.shadow.shadow.java.annotation'
-  relocate 'com.google.errorprone.annotations', 'com.google.shadow.errorprone'
-  relocate 'afu.org.checkerframework', 'com.google.common.shadow.checkerframework'
+  relocate 'javax.annotation', 'com.google.common.shadow.shadow.java.annotation'
+  relocate 'com.google.errorprone.annotations', 'com.google.common.shadow.errorprone'
+  relocate 'org.checkerframework', 'com.google.common.shadow.org.checkerframework'
+  relocate 'org.codehaus.mojo', 'com.google.common.shadow.org.codehaus.mojo'
+  relocate 'afu.plume', 'com.google.common.shadow.afu.plume'
+  relocate 'afu.org.checkerframework', 'com.google.common.shadow.afu.checkerframework'
+  relocate 'com.google.j2objc', 'com.google.common.shadow.j2objc'
 }
 
 
@@ -39,7 +43,6 @@ compileJava.dependsOn = ['uberJar']
 compileJava {
   inputs.property("moduleName", "com.google.protobuf") 
   doFirst {
-    classpath.each { println it }
     options.compilerArgs = []
     classpath = files(["${buildDir}/grpc"])
   }
@@ -51,7 +54,7 @@ task compileOne (type: JavaCompile) {
     println file("${buildDir}/libs/guava-in.jar")
   }
     source = file('module-info.java')
-    classpath = files() // files("${buildDir}/libs/guava-in.jar")
+    classpath = files()
     destinationDir = file("${buildDir}/module-info")
 }
 
