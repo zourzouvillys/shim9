@@ -11,14 +11,34 @@ repositories {
   jcenter()
 }
 
+configurations {
+
+  moduleDist
+
+}
+
+sourceSets {
+    original
+    module
+    impl
+}
 
 def grpcVersion = '1.12.0'
 def reactiveGrpcVersion = '0.8.2'
 
 dependencies {
-  implementation 'com.google.protobuf:protobuf-java:3.5.1'
-  implementation "io.grpc:grpc-protobuf:${grpcVersion}"
-  implementation "io.grpc:grpc-stub:${grpcVersion}"
+  moduleDist project(path: ':protobuf', configuration: 'moduleDist')
+  //originalImplementation 'com.google.protobuf:protobuf-java:3.5.1'
+  implementation ("io.grpc:grpc-protobuf:${grpcVersion}") {
+    exclude group: 'com.google.code.gson'
+    exclude group: 'com.google.guava'
+    exclude group: 'com.google.protobuf'
+  }
+  implementation ("io.grpc:grpc-stub:${grpcVersion}") {
+    exclude group: 'com.google.code.gson'
+    exclude group: 'com.google.guava'
+    exclude group: 'com.google.protobuf'
+  }
 }
 
 
@@ -31,11 +51,15 @@ task uberJar(type: Copy) {
 
 compileJava.dependsOn = ['uberJar']
 
+////
+
 compileJava {
   inputs.property("moduleName", "io.grpc")    
   doFirst {
+    println 'xxxxx'
     classpath.each { println it }
     options.compilerArgs = [
+      configurations.moduleDist.each{println it}.asPath
     ]
     classpath = files(["${buildDir}/grpc"])
   }
@@ -48,7 +72,7 @@ task compileOne (type: JavaCompile) {
     destinationDir = file("${buildDir}/module-info")
 }
 
-compileOne.options.compilerArgs = ["--patch-module", "io.grpc=${buildDir}/grpc"]
+compileOne.options.compilerArgs = ["--patch-module", "io.grpc=${buildDir}/grpc", "--module-path", configurations.moduleDist.each { println it } .asPath ]
 compileOne.inputs.properties['moduleName'] = 'io.grpc'
 
 compileOne.dependsOn = [ 'uberJar' ]

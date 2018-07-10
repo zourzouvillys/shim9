@@ -1,7 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar;
 
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 targetCompatibility = 9
@@ -19,16 +21,18 @@ configurations {
 }
 
 dependencies {
-  implementation 'com.google.protobuf:protobuf-java:3.5.1'
+  compile 'com.google.guava:guava:25.1-jre'
+}
+
+task uberJar(type: ShadowJar) {
+  appendix = 'in'
+  configurations = [ project.configurations.compile ]
+  relocate 'javax.annotation', 'com.google.shadow.shadow.java.annotation'
+  relocate 'com.google.errorprone.annotations', 'com.google.shadow.errorprone'
+  relocate 'afu.org.checkerframework', 'com.google.common.shadow.checkerframework'
 }
 
 
-task uberJar(type: Copy) {
-  into "${buildDir}/grpc"
-  from configurations.compileClasspath.
-                                         findAll { it.name.endsWith('jar') }.
-                                         flatten { zipTree(it) }
-}
 
 compileJava.dependsOn = ['uberJar']
 
@@ -36,21 +40,23 @@ compileJava {
   inputs.property("moduleName", "com.google.protobuf") 
   doFirst {
     classpath.each { println it }
-    options.compilerArgs = [
-    ]
+    options.compilerArgs = []
     classpath = files(["${buildDir}/grpc"])
   }
 }
 
 
 task compileOne (type: JavaCompile) {
+  doFirst {
+    println file("${buildDir}/libs/guava-in.jar")
+  }
     source = file('module-info.java')
-    classpath = files("${buildDir}/grpc")
+    classpath = files() // files("${buildDir}/libs/guava-in.jar")
     destinationDir = file("${buildDir}/module-info")
 }
 
-compileOne.options.compilerArgs = ["--patch-module", "com.google.protobuf=${buildDir}/grpc"]
-compileOne.inputs.properties['moduleName'] = 'com.google.protobuf'
+compileOne.options.compilerArgs = ["--patch-module", "com.google.common=${buildDir}/libs/guava-in.jar"]
+compileOne.inputs.properties['moduleName'] = 'com.google.common'
 
 compileOne.dependsOn = [ 'uberJar' ]
 
@@ -58,9 +64,8 @@ compileOne.dependsOn = [ 'uberJar' ]
 
 
 task targetJar(type: Jar) {
-    // appendix = 'target'
     from file("${buildDir}/module-info")
-    from "${buildDir}/grpc"
+    from zipTree(file("${buildDir}/libs/guava-in.jar"))
 }
 
 targetJar.dependsOn = [compileOne]
@@ -74,13 +79,12 @@ artifacts {
 }
 
 
-
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
           artifact targetJar
-          artifactId 'protobuf'
+          artifactId 'guava'
+          version '25.1-jre'
         }
     }
 }
