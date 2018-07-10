@@ -1,0 +1,71 @@
+
+plugins {
+  id 'java-library'
+//  // id 'com.zyxist.chainsaw' version '0.3.1'
+//  id 'com.github.johnrengelman.shadow' version '2.0.4'
+  
+  
+}
+
+targetCompatibility = 9
+sourceCompatibility = 9
+
+repositories {
+  jcenter()
+}
+
+def grpcVersion = '1.12.0'
+def reactiveGrpcVersion = '0.8.2'
+
+dependencies {
+  implementation 'com.google.protobuf:protobuf-java:3.5.1'
+  implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+  implementation "io.grpc:grpc-stub:${grpcVersion}"
+}
+
+
+task uberJar(type: Copy) {
+  into "${buildDir}/grpc"
+  from configurations.compileClasspath.
+                                         findAll { it.name.endsWith('jar') }.
+                                         flatten { zipTree(it) }
+}
+
+compileJava.dependsOn = ['uberJar']
+
+compileJava {
+  inputs.property("moduleName", "io.grpc")    
+  doFirst {
+    classpath.each { println it }
+    options.compilerArgs = [
+    ]
+    classpath = files(["${buildDir}/grpc"])
+  }
+}
+
+
+task compileOne (type: JavaCompile) {
+    source = file('module-info.java')
+    classpath = files("${buildDir}/grpc")
+    destinationDir = file("${buildDir}/module-info")
+}
+
+compileOne.options.compilerArgs = ["--patch-module", "io.grpc=${buildDir}/grpc"]
+compileOne.inputs.properties['moduleName'] = 'io.grpc'
+
+compileOne.dependsOn = [ 'uberJar' ]
+
+////
+
+
+task targetJar(type: Jar) {
+    // appendix = 'target'
+    from file("${buildDir}/module-info")
+    from "${buildDir}/grpc"
+}
+
+targetJar.dependsOn = [compileOne]
+
+
+tasks.getByName(BasePlugin.ASSEMBLE_TASK_NAME).dependsOn targetJar
+
