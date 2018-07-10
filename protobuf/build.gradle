@@ -36,9 +36,6 @@ task uberJar(type: ShadowJar) {
 }
 
 
-
-
-
 compileJava.dependsOn = ['uberJar']
 
 compileJava {
@@ -47,10 +44,7 @@ compileJava {
   }
   inputs.property("moduleName", "com.google.protobuf") 
   doFirst {
-    classpath.each { println it }
-    options.compilerArgs = [
-    ]
-    classpath = files(["${buildDir}/grpc"])
+    classpath = files(["${buildDir}/libs/protobuf-in.jar"])
   }
 }
 
